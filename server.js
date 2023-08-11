@@ -25,7 +25,7 @@ const server = http.createServer((request, response) =>{
     response.end();
 });
 
-const PORT = 3000;
-server.listen(3000, () =>{
-    console.log('server started on port 3000');
+const PORT = 9000;
+server.listen(9000, () =>{
+    console.log('server started on port 9000');
 });
