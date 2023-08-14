@@ -1,31 +1,46 @@
 const http = require('http');
+const express = require("express");
+const mongoose = require('mongoose');
 
-const server = http.createServer((request, response) =>{
-    console.log('method: ${request.method}');
-    console.log('url: ${request.url}');
+const cors = require("cors");
+
+const app = express();
+app.use(express.json());
+
+var corsOptions = {
+  origin: "http://localhost:3000"
+};
+
+app.use(cors(corsOptions));
+
+const db = require("./app/models");
+
+db.mongoose.connect(db.url, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
+  .then(() => {
+    console.log("Connected to the database!");
     
-    if(request.url === '/movies'){
-        if(request.method === 'GET'){
-            response.write( "All Movies Data in JSON format from Mongo DB")
-        }
-    }
+  })
+  .catch(err => {
+    console.log("Cannot connect to the database!", err);
+    process.exit();
+  });
 
-    if(request.url === '/genres'){
-        if(request.method === 'GET'){
-            response.write( "All Genres Data in JSON format from Mongo DB")
-        }
-    }
+  require("./app/routes/movie.routes")(app);
 
-    if(request.url === '/artists'){
-        if(request.method === 'GET'){
-            response.write( "All Artist Data in JSON format from Mongo DB")
-        }
-    }
+  require("./app/routes/genre.routes")(app);
 
-    response.end();
-});
+  require("./app/routes/artist.routes")(app);
 
-const PORT = 9000;
-server.listen(9000, () =>{
-    console.log('server started on port 9000');
+  require("./app/routes/user.routes")(app);
+
+  app.get("/", (req, res) => {
+    res.json({ message: "Movie booking application" });
+  });
+
+const PORT =  process.env.PORT || 3000;
+app.listen(PORT, () =>{
+    console.log(`server started on port  ${PORT}. http://localhost:3000`);
 });
