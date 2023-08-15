@@ -30,9 +30,9 @@ db.mongoose.connect(db.url, {
 
   require("./app/routes/movie.routes")(app);
 
-  require("./app/routes/genre.routes")(app);
+  require("./app/routes/genre.routes")(app)
 
-  require("./app/routes/artist.routes")(app);
+  require("./app/routes/artist.routes")(app)
 
   require("./app/routes/user.routes")(app);
 
@@ -40,7 +40,7 @@ db.mongoose.connect(db.url, {
     res.json({ message: "Movie booking application" });
   });
 
-const PORT =  process.env.PORT || 3000;
+const PORT =  process.env.PORT || 8085;
 app.listen(PORT, () =>{
-    console.log(`server started on port  ${PORT}. http://localhost:3000`);
+    console.log(`server started on port  ${PORT}. http://localhost:8085`);
 });

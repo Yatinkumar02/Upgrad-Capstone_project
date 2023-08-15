@@ -1,5 +1,5 @@
 module.exports = app => {
-    const movies = require("./controllers/movie.controller.js");
+    const movies = require("../controllers/movie.controllers.js");
  
     var router = require("express").Router();
     

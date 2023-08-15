@@ -5,9 +5,9 @@ const db = {};
 db.mongoose = mongoose;
 db.url = dbConfig.url;
 
-db.artists = require("./artist.model");
-db.genres = require("./genre.model");
-db.movies = require("./movie.model");
-db.users = require("./user.model");
+db.artists = require("./artist.model")(mongoose);
+db.genres = require("./genre.model")(mongoose);
+db.movies = require("./movie.model")(mongoose);
+db.users = require("./user.model")(mongoose);
 
 module.exports = db;
