@@ -4,72 +4,70 @@ const db = require("../models");
 const User = db.users;
 const {atob,btoa}  = require("b2a");
 
-exports.login = (req, res) => {
-    console.log(req.headers.authorization);
-    const authHeader  = req.headers.authorization.split(" ")[1];
-    console.log(authHeader);
-    console.log(atob(authHeader));
-    let unamePwd = atob(authHeader);
-    const uname =  unamePwd.split(":")[0];
-    const pwd = unamePwd.split(":")[1];
+exports.login = async (req, res) => {
+  console.log(req.headers.authorization);
+  const authHeader = req.headers.authorization.split(" ")[1];
+  console.log(authHeader);
+  console.log(atob(authHeader));
+  let unamePwd = atob(authHeader);
+  const uname = unamePwd.split(":")[0];
+  const pwd = unamePwd.split(":")[1];
 
-    console.log(uname);
-    console.log(pwd);
-    if (!uname && !pwd) {
-      res.status(400).send({ message: "Please provide username and password to continue." });
+  console.log(uname);
+  console.log(pwd);
+
+  if (!uname || !pwd) {
+    res.status(400).send({ message: "Please provide username and password to continue." });
+    return;
+  }
+
+  try {
+    const user = await User.findOne({ username: uname }).exec();
+
+    if (!user) {
+      console.log("IN ERR");
+      res.status(500).send({
+        message: "User Not Found."
+      });
       return;
     }
 
-     const filter = { username: uname };
+    if (pwd === user.password) {
+      console.log("Login Successfully");
+      const tokgen = new TokenGenerator();
+      const accessTokenGenerated = tokgen.generate();
+      console.log(accessTokenGenerated);
 
-    User.find(filter, (err, usersFound)=>{
-      let user = usersFound[0];  
-      if(err || user === null){
-          console.log("IN ERR");
-          res.status(500).send({
-          message: "User Not Found."
+      const uuidGenerated = fromString(uname);
+      user.isLoggedIn = true;
+      user.uuid = uuidGenerated;
+      user.accesstoken = accessTokenGenerated;
+
+      const filter = { username: uname };
+
+      const updatedUser = await User.findOneAndUpdate(filter, user, { useFindAndModify: false }).exec();
+
+      if (!updatedUser) {
+        res.status(404).send({
+          message: "Some error occurred, please try again later."
         });
-      }else {
-
-        if(pwd === user.password){
-          console.log("sanket shivam")
-          const tokgen = new TokenGenerator(); 
-          const accessTokenGenerated = tokgen.generate();
-          console.log(accessTokenGenerated);
-          
-          const uuidGenerated = fromString(uname);
-          user.isLoggedIn = true;
-          user.uuid = uuidGenerated;
-          user.accesstoken = accessTokenGenerated;
-          User.findOneAndUpdate(filter, user, { useFindAndModify: false })
-          .then(data => {
-            if (!data) {
-              res.status(404).send({
-                message: "Some error occurred, please try again later."
-              });
-            } else 
-            { 
-                res.header('access-token', user.accesstoken); 
-                
-                res.send({"id":user.uuid, "access-token":user.accesstoken}); 
-            }
-          })
-          .catch(err => {
-            res.status(500).send({
-              message: "Error updating."
-            });
-          });
-
-        }else{
-          res.status(500).send({
-            message: "Please enter valid password."
-          });
-        }
+      } else {
+        res.header('access-token', user.accesstoken);
+        res.send({ "id": user.uuid, "access-token": user.accesstoken });
       }
-      
+    } else {
+      res.status(500).send({
+        message: "Please enter valid password."
+      });
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).send({
+      message: "An error occurred during login."
     });
+  }
+};
 
-  };
 
  exports.signUp = (req, res) => {
      
@@ -106,28 +104,28 @@ exports.login = (req, res) => {
   };
  
 
-exports.logout = (req, res) => {
-
-    if (!req.body.uuid) {
-      res.status(400).send({ message: "ID Not Found!" });
-      return;
-    }
-   
-    const update = { isLoggedIn: false, uuid: "",accesstoken: ""  };
+  exports.logout = async (req, res) => {
+    const { userId } = req.params;
   
-    User.findOneAndUpdate({"uuid": req.body.uuid}, update)
-      .then(data => {
-        if (!data) {
-          res.status(404).send({
-            message: "Some error occurred, please try again later."
-          });
-        } else res.send({ message: "Logged Out successfully." });
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: "Error updating."
-        });
+    try {
+      const user = await User.findById(userId).exec();
+      if (!user) {
+        res.status(404).send({ message: "User not found." });
+        return;
+      }
+  
+      user.isLoggedIn = false;
+      user.uuid = null;
+      user.accesstoken = null;
+  
+      const updatedUser = await user.save();
+      res.status(200).send({ message: "User logged out successfully." });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).send({
+        message: "An error occurred during logout."
       });
+    }
   };
   
 exports.getCouponCode = (req, res) => {
