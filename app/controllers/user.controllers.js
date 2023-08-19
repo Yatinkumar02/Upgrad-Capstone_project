@@ -32,7 +32,7 @@ exports.login = (req, res) => {
     }else {
 
       if(pwd === user.password){
-        console.log("sanket shivam")
+        console.log("Login Sucessful")
         const tokgen = new TokenGenerator(); 
         const accessTokenGenerated = tokgen.generate();
         console.log(accessTokenGenerated);
@@ -134,7 +134,7 @@ exports.login = (req, res) => {
 exports.getCouponCode = (req, res) => {
   console.log("In coupen code");
   console.log(req.headers.authorization);
-  const tokenReceived  = req.headers.authorization.split(" ")[1];
+  const tokenReceived  = req.headers.authorization.split(" ")[0];
   console.log(tokenReceived);
   User.find({"accesstoken": tokenReceived})
   .then(data => {
